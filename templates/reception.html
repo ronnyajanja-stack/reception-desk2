@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KMLTTB Digital Reception Desk</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    body { background-color: #f1f4f8; font-family: 'Segoe UI', system-ui, sans-serif; }
+    .card-custom { border-radius: 8px; border: none; }
+    .stat-card { border-left: 4px solid; }
+    .stat-active { border-left-color: #198754; }
+    .stat-total { border-left-color: #0d6efd; }
+    .table-reception th { font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .table-reception td { font-size: 0.88rem; vertical-align: middle; }
+    .form-label { font-weight: 600; font-size: 0.82rem; color: #333; }
+  </style>
+</head>
+<body>
+
+  <!-- Navigation Bar -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm mb-3">
+    <div class="container-fluid px-4">
+      <span class="navbar-brand fw-bold">
+        <i class="bi bi-person-badge-fill me-2"></i>KMLTTB Digital Reception Desk
+      </span>
+      <div class="d-flex align-items-center gap-3 text-white">
+        <a href="{{ url_for('export_excel') }}" class="btn btn-sm btn-success">
+          <i class="bi bi-file-earmark-excel me-1"></i>Export Daily Log
+        </a>
+        <div class="fw-semibold small"><i class="bi bi-clock me-1"></i><span id="clock"></span></div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid px-4">
+
+    <!-- Flash Alerts -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, msg in messages %}
+          <div class="alert alert-{{ category }} alert-dismissible fade show py-2" role="alert">
+            {{ msg }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+
+    <!-- Counters -->
+    <div class="row g-3 mb-3">
+      <div class="col-md-6">
+        <div class="card card-custom stat-card stat-active shadow-sm">
+          <div class="card-body py-2 d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-muted small text-uppercase fw-semibold">Currently Active Inside</div>
+              <h3 class="fw-bold mb-0 text-success">{{ active_count }}</h3>
+            </div>
+            <i class="bi bi-person-walking fs-1 text-success opacity-50"></i>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-6">
+        <div class="card card-custom stat-card stat-total shadow-sm">
+          <div class="card-body py-2 d-flex justify-content-between align-items-center">
+            <div>
+              <div class="text-muted small text-uppercase fw-semibold">Total Checked In Today</div>
+              <h3 class="fw-bold mb-0 text-primary">{{ total_today }}</h3>
+            </div>
+            <i class="bi bi-calendar-check fs-1 text-primary opacity-50"></i>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      
+      <!-- Check-In Form -->
+      <div class="col-lg-4">
+        <div class="card card-custom shadow-sm">
+          <div class="card-header bg-white border-bottom py-3">
+            <h6 class="mb-0 fw-bold text-primary">
+              <i class="bi bi-pencil-square me-2"></i>New Visitor / Document Intake
+            </h6>
+          </div>
+          <div class="card-body">
+            <form method="POST" action="{{ url_for('reception_portal') }}">
+              
+              <div class="mb-2">
+                <label class="form-label">Visitor / Client Name *</label>
+                <input type="text" name="visitor_name" class="form-control form-control-sm" required placeholder="Full Name">
+              </div>
+
+              <div class="row g-2 mb-2">
+                <div class="col-md-6">
+                  <label class="form-label">Phone Number *</label>
+                  <input type="tel" name="phone_no" class="form-control form-control-sm" required placeholder="07xxxxxxxx" autocomplete="off">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">National ID / Passport</label>
+                  <input type="text" name="national_id" class="form-control form-control-sm" placeholder="ID Number" autocomplete="off">
+                </div>
+              </div>
+
+              <div class="row g-2 mb-2">
+                <div class="col-md-6">
+                  <label class="form-label">Registration Number</label>
+                  <input type="text" name="file_or_doc_no" class="form-control form-control-sm" placeholder="e.g. A014400 / A1B2511">
+                </div>
+                <div class="col-md-6">
+                  <label class="form-label">Department Visiting *</label>
+                  <select name="department_visited" class="form-select form-select-sm" required>
+                    <option value="" disabled selected>Select Department</option>
+                    <option value="Registry">Registry</option>
+                    <option value="Laboratories">Laboratories</option>
+                    <option value="Validation">Validation</option>
+                    <option value="Administration">Administration</option>
+                    <option value="Human Resource">Human Resource</option>
+                    <option value="Indexing">Indexing</option>
+                    <option value="IT">IT</option>
+                    <option value="DCI">DCI</option>
+                    <option value="Examination">Examination</option>
+                    <option value="Procurement">Procurement</option>
+                    <option value="Inspectors">Inspectors</option>
+                    <option value="Finance / Accounts">Finance / Accounts</option>
+                    <option value="Quality Assurance">Quality Assurance</option>
+                    <option value="Registrar Office">Registrar's Office</option>
+                  </select>
+                </div>
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label">Officer / Person to See</label>
+                <input type="text" name="staff_visited" class="form-control form-control-sm" placeholder="e.g. Officer Name">
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label">Purpose of Visit / Drop-off *</label>
+                <textarea name="purpose" rows="2" class="form-control form-control-sm" required placeholder="Collection of license, inquiry, file delivery, exam verification..."></textarea>
+              </div>
+
+              <div class="mb-2">
+                <label class="form-label">Comments / Recommendations (Optional)</label>
+                <textarea name="remarks" rows="2" class="form-control form-control-sm" placeholder="Action needed, special instructions, document notes..."></textarea>
+              </div>
+
+              <div class="mb-3">
+                <label class="form-label">Duty Receptionist *</label>
+                <input type="text" name="receptionist_name" class="form-control form-control-sm" required placeholder="Officer on Duty">
+              </div>
+
+              <button type="submit" class="btn btn-primary btn-sm w-100 fw-bold py-2">
+                <i class="bi bi-box-arrow-in-down me-1"></i>Check-In (Record Time In)
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+
+      <!-- Visitor Ledger & Search -->
+      <div class="col-lg-8">
+        
+        <!-- Search / Filter Bar -->
+        <div class="card card-custom shadow-sm mb-3">
+          <div class="card-body py-2">
+            <form method="GET" action="{{ url_for('reception_portal') }}" class="row g-2 align-items-center">
+              <div class="col-md-7">
+                <input type="text" name="search" class="form-control form-control-sm" placeholder="Search Visitor Name, Phone, ID, Reg No, or Remarks..." value="{{ search_query }}">
+              </div>
+              <div class="col-md-3">
+                <select name="status" class="form-select form-select-sm">
+                  <option value="">All Statuses</option>
+                  <option value="Active Inside" {% if status_filter == 'Active Inside' %}selected{% endif %}>Active Inside</option>
+                  <option value="Departed" {% if status_filter == 'Departed' %}selected{% endif %}>Departed</option>
+                </select>
+              </div>
+              <div class="col-md-2 d-flex gap-1">
+                <button type="submit" class="btn btn-sm btn-primary w-100">Filter</button>
+                {% if search_query or status_filter %}
+                  <a href="{{ url_for('reception_portal') }}" class="btn btn-sm btn-outline-secondary">Reset</a>
+                {% endif %}
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Activity Ledger -->
+        <div class="card card-custom shadow-sm">
+          <div class="card-header bg-white border-bottom py-3 d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold text-dark">
+              <i class="bi bi-clock-history me-2"></i>Reception Activity Ledger
+            </h6>
+            <span class="badge bg-secondary">{{ entries|length }} records listed</span>
+          </div>
+          <div class="card-body p-0">
+            <div class="table-responsive">
+              <table class="table table-hover align-middle mb-0 table-reception">
+                <thead class="table-light">
+                  <tr>
+                    <th>Date</th>
+                    <th>Time In</th>
+                    <th>Time Out</th>
+                    <th>Visitor</th>
+                    <th>Contact</th>
+                    <th>Department Visiting</th>
+                    <th>Purpose / Reg No</th>
+                    <th>Comments / Recommendations</th>
+                    <th>Status</th>
+                    <th class="text-center">Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% if entries %}
+                    {% for row in entries %}
+                    <tr>
+                      <td><small class="text-muted">{{ row.date_logged }}</small></td>
+                      <td><span class="badge bg-success">{{ row.time_in }}</span></td>
+                      <td>
+                        {% if row.time_out %}
+                          <span class="badge bg-secondary">{{ row.time_out }}</span>
+                        {% else %}
+                          <span class="text-muted small">—</span>
+                        {% endif %}
+                      </td>
+                      <td><strong>{{ row.visitor_name }}</strong></td>
+                      <td>
+                        <small>{{ row.phone_no }}</small>
+                        {% if row.national_id %}<br><small class="text-muted">ID: {{ row.national_id }}</small>{% endif %}
+                      </td>
+                      <td>
+                        <span class="badge bg-light text-dark border">{{ row.department_visited }}</span><br>
+                        <small class="text-muted">{{ row.staff_visited or 'General' }}</small>
+                      </td>
+                      <td>
+                        {% if row.file_or_doc_no %}
+                          <span class="badge bg-warning text-dark border mb-1">{{ row.file_or_doc_no }}</span><br>
+                        {% endif %}
+                        <small>{{ row.purpose }}</small>
+                      </td>
+                      <td>
+                        {% if row.remarks %}
+                          <small class="text-secondary"><i class="bi bi-chat-left-text me-1 text-primary"></i>{{ row.remarks }}</small>
+                        {% else %}
+                          <span class="text-muted small">—</span>
+                        {% endif %}
+                      </td>
+                      <td>
+                        {% if row.status == 'Active Inside' %}
+                          <span class="badge bg-success">Inside</span>
+                        {% else %}
+                          <span class="badge bg-dark">Departed</span>
+                        {% endif %}
+                      </td>
+                      <td class="text-center">
+                        {% if not row.time_out %}
+                          <form action="{{ url_for('checkout', entry_id=row.id) }}" method="POST">
+                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Record Visitor Departure">
+                              <i class="bi bi-box-arrow-right me-1"></i>Sign Out
+                            </button>
+                          </form>
+                        {% else %}
+                          <small class="text-muted"><i class="bi bi-check-all text-success"></i> Done</small>
+                        {% endif %}
+                      </td>
+                    </tr>
+                    {% endfor %}
+                  {% else %}
+                    <tr>
+                      <td colspan="10" class="text-center text-muted py-4">No activity records found.</td>
+                    </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    function updateClock() {
+      const now = new Date();
+      document.getElementById('clock').textContent = now.toLocaleDateString('en-GB') + ' ' + now.toLocaleTimeString();
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+  </script>
+</body>
+</html>
