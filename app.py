@@ -6,7 +6,8 @@ import io
 import os
 
 app = Flask(__name__)
-app.secret_key = os.urandom(24)
+# Secret key: reads from environment variable if set, otherwise generates a secure token
+app.secret_key = os.environ.get("SECRET_KEY", os.urandom(24))
 
 DB_NAME = "reception.db"
 
@@ -36,7 +37,7 @@ def init_db():
             status TEXT DEFAULT 'Active Inside'
         )
     """)
-    # Add remarks column if upgrading existing database
+    # Add remarks column if upgrading an existing database
     try:
         cur.execute("ALTER TABLE reception_log ADD COLUMN remarks TEXT")
     except Exception:
@@ -175,4 +176,6 @@ def export_excel():
     )
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5001, debug=True)
+    port = int(os.environ.get("PORT", 5001))
+    debug_mode = os.environ.get("FLASK_ENV") == "development"
+    app.run(host="0.0.0.0", port=port, debug=debug_mode)
