@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ exec_title }} &bull; KMLTTB Tracer</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <script>
+    (function() {
+      const saved = localStorage.getItem('kmlttb_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', saved);
+    })();
+  </script>
+  <style>
+    :root, [data-theme="light"] {
+      --bg-canvas: #eef2f7;
+      --surface-panel: #f7f9fc;
+      --surface-header: #e9eff7;
+      --surface-input: #ffffff;
+      --surface-muted-bar: #e2e8f0;
+      --row-alt: rgba(226, 232, 240, 0.35);
+      --row-hover: rgba(13, 148, 136, 0.08);
+      --ink-dark: #0f172a;
+      --ink-sub: #475569;
+      --border-soft: #d5dfec;
+      --rec-bg: #f0fdfa;
+      --rec-border: #99f6e4;
+      --rec-ink: #0f172a;
+      --glow-a: rgba(13, 148, 136, 0.12);
+      --glow-b: rgba(79, 70, 229, 0.10);
+      --shadow-card: 0 8px 24px -10px rgba(15, 23, 42, 0.12), 0 2px 6px rgba(15, 23, 42, 0.04);
+      --shadow-float: 0 18px 38px -12px rgba(15, 23, 42, 0.2);
+    }
+
+    [data-theme="dark"] {
+      --bg-canvas: #090f1a;
+      --surface-panel: #111a2b;
+      --surface-header: #162238;
+      --surface-input: #0d1524;
+      --surface-muted-bar: #1a2842;
+      --row-alt: rgba(30, 41, 59, 0.45);
+      --row-hover: rgba(20, 184, 166, 0.12);
+      --ink-dark: #f1f5f9;
+      --ink-sub: #94a3b8;
+      --border-soft: #24344d;
+      --rec-bg: #0f292b;
+      --rec-border: #134e4a;
+      --rec-ink: #e2e8f0;
+      --glow-a: rgba(20, 184, 166, 0.14);
+      --glow-b: rgba(59, 130, 246, 0.12);
+      --shadow-card: 0 10px 28px -10px rgba(0, 0, 0, 0.65);
+      --shadow-float: 0 20px 44px -12px rgba(0, 0, 0, 0.8);
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background-color: var(--bg-canvas);
+      background-image:
+        radial-gradient(at 12% 0%, var(--glow-a) 0px, transparent 45%),
+        radial-gradient(at 88% 4%, var(--glow-b) 0px, transparent 45%);
+      color: var(--ink-dark);
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    [data-theme="dark"] .text-dark { color: #f1f5f9 !important; }
+    [data-theme="dark"] .text-muted { color: #94a3b8 !important; }
+    [data-theme="dark"] .text-secondary { color: #cbd5e1 !important; }
+    [data-theme="dark"] .bg-white { background-color: var(--surface-input) !important; color: var(--ink-dark) !important; }
+    [data-theme="dark"] .input-group-text { background-color: var(--surface-header) !important; color: var(--ink-dark) !important; border-color: var(--border-soft) !important; }
+    [data-theme="dark"] .modal-content { background-color: var(--surface-panel) !important; color: var(--ink-dark) !important; border: 1px solid var(--border-soft) !important; }
+    [data-theme="dark"] .btn-close { filter: invert(1) grayscale(100%); }
+
+    .tracer-nav {
+      background: linear-gradient(105deg, #071220 0%, #132238 52%, #0b5c56 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .theme-toggle-btn {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      color: #ffffff;
+      border-radius: 999px;
+      padding: 0.3rem 0.72rem;
+      font-size: 0.76rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+    .theme-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.22);
+      color: #fde68a;
+    }
+
+    .kpi-card-vivid {
+      border: none;
+      border-radius: 16px;
+      color: #ffffff;
+      padding: 1.15rem 1.3rem;
+      box-shadow: var(--shadow-card);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .kpi-card-vivid:hover { transform: translateY(-3px); box-shadow: var(--shadow-float); }
+
+    .grad-emerald { background: linear-gradient(135deg, #059669 0%, #10b981 100%); }
+    .grad-ocean   { background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); }
+    .grad-indigo  { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); }
+    .grad-amber   { background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); }
+    .grad-teal    { background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%); }
+
+    .kpi-glass-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 13px;
+      background: rgba(255, 255, 255, 0.2);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      color: #ffffff;
+      flex-shrink: 0;
+    }
+
+    .section-card {
+      background-color: var(--surface-panel);
+      border: 1px solid var(--border-soft);
+      border-radius: 16px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .section-card-head {
+      background-color: var(--surface-header);
+      border-bottom: 1px solid var(--border-soft);
+      border-radius: 16px 16px 0 0;
+      padding: 0.85rem 1.25rem;
+    }
+
+    .form-label { font-weight: 700; font-size: 0.76rem; color: var(--ink-dark); margin-bottom: 0.25rem; }
+
+    .form-control, .form-select {
+      background-color: var(--surface-input);
+      border: 1px solid var(--border-soft);
+      color: var(--ink-dark);
+      border-radius: 10px;
+      font-size: 0.85rem;
+      padding: 0.44rem 0.68rem;
+    }
+    .form-control:focus, .form-select:focus {
+      background-color: var(--surface-input);
+      color: var(--ink-dark);
+      border-color: #0d9488;
+      box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.18);
+    }
+
+    .btn { border-radius: 10px; font-weight: 600; }
+
+    .badge-inside {
+      background: rgba(22, 163, 74, 0.16);
+      color: #22c55e;
+      border: 1px solid rgba(34, 197, 94, 0.35);
+      font-weight: 700;
+      padding: 0.28rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.73rem;
+    }
+    [data-theme="light"] .badge-inside { background: #dcfce7; color: #15803d; border-color: #86efac; }
+
+    .badge-departed {
+      background: rgba(148, 163, 184, 0.16);
+      color: var(--ink-sub);
+      border: 1px solid var(--border-soft);
+      font-weight: 700;
+      padding: 0.28rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.73rem;
+    }
+
+    .floor-pill-3 {
+      background: rgba(37, 99, 235, 0.16);
+      color: #60a5fa;
+      border: 1px solid rgba(96, 165, 250, 0.35);
+      font-weight: 700;
+      padding: 0.22rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.71rem;
+    }
+    [data-theme="light"] .floor-pill-3 { background: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
+
+    .floor-pill-4 {
+      background: rgba(13, 148, 136, 0.18);
+      color: #2dd4bf;
+      border: 1px solid rgba(45, 212, 191, 0.35);
+      font-weight: 700;
+      padding: 0.22rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.71rem;
+    }
+    [data-theme="light"] .floor-pill-4 { background: #ccfbf1; color: #0f766e; border-color: #5eead4; }
+
+    .dept-pill {
+      background: rgba(124, 58, 237, 0.16);
+      color: #a78bfa;
+      border: 1px solid rgba(167, 139, 250, 0.35);
+      font-weight: 700;
+      padding: 0.24rem 0.6rem;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    [data-theme="light"] .dept-pill { background: #ede9fe; color: #5b21b6; border-color: #c4b5fd; }
+
+    .reg-pill {
+      background: rgba(245, 158, 11, 0.16);
+      color: #fbbf24;
+      border: 1px solid rgba(251, 191, 36, 0.35);
+      font-weight: 700;
+      padding: 0.18rem 0.5rem;
+      border-radius: 7px;
+      font-size: 0.72rem;
+    }
+    [data-theme="light"] .reg-pill { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+
+    .table-tracer { color: var(--ink-dark); }
+    .table-tracer th {
+      background-color: var(--surface-muted-bar);
+      color: var(--ink-dark);
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.72rem 0.8rem;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .table-tracer td {
+      font-size: 0.84rem;
+      padding: 0.72rem 0.8rem;
+      border-bottom: 1px solid var(--border-soft);
+      vertical-align: middle;
+    }
+    .table-tracer tbody tr:nth-child(even) { background-color: var(--row-alt); }
+    .table-tracer tbody tr:hover { background-color: var(--row-hover); }
+
+    .rec-strip {
+      background: var(--rec-bg);
+      border: 1px solid var(--rec-border);
+      border-left: 4px solid #0d9488;
+      color: var(--rec-ink);
+      border-radius: 12px;
+      padding: 0.72rem 0.9rem;
+    }
+  </style>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+</head>
+<body>
+
+  <nav class="navbar navbar-expand-lg navbar-dark tracer-nav sticky-top shadow-sm mb-4">
+    <div class="container-fluid px-4">
+      <div class="d-flex align-items-center gap-2.5">
+        <span class="navbar-brand fw-bold mb-0" style="font-weight:800;">
+          <i class="bi {{ role_info.icon }} me-2 text-warning"></i>{{ exec_title }}
+        </span>
+        <span class="badge rounded-pill px-3 py-1.5 d-none d-md-inline-flex align-items-center gap-1.5" style="background:rgba(255,255,255,0.16);color:#fff;">
+          <span class="rounded-circle bg-success d-inline-block" style="width:7px;height:7px;"></span>
+          Live 3rd &amp; 4th Floor Sync
+        </span>
+      </div>
+
+      <div class="d-flex align-items-center gap-2">
+        <button type="button" class="theme-toggle-btn" onclick="toggleTheme()">
+          <i id="themeIcon" class="bi bi-moon-stars-fill"></i>
+          <span id="themeLabel">Dark Mode</span>
+        </button>
+        <a href="{{ url_for('generate_pdf_report', period=period, start_date=start_date, end_date=end_date, floor=floor_filter, department=dept_filter) }}"
+           class="btn btn-sm btn-warning fw-bold text-dark">
+          <i class="bi bi-file-earmark-pdf-fill me-1"></i>Generate PDF
+        </a>
+        <a href="{{ url_for('export_excel', period=period, start_date=start_date, end_date=end_date, floor=floor_filter, department=dept_filter) }}"
+           class="btn btn-sm btn-success">
+          <i class="bi bi-file-earmark-spreadsheet me-1"></i>Excel
+        </a>
+        <a href="{{ url_for('logout') }}" class="btn btn-sm btn-danger ms-1">
+          <i class="bi bi-box-arrow-right me-1"></i>Sign Out
+        </a>
+      </div>
+    </div>
+  </nav>
+
+  <div class="container-fluid px-4 pb-5">
+
+    <!-- 1. TOP EXECUTIVE KPI DASHBOARD -->
+    <div class="row g-3 mb-4">
+      <div class="col-sm-6 col-xl-3">
+        <div class="kpi-card-vivid grad-ocean">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="small fw-bold text-uppercase" style="color:rgba(255,255,255,0.85);font-size:0.7rem;letter-spacing:0.05em;">Total Visitors</div>
+              <h2 class="fw-bold mb-0 mt-1" style="font-weight:800;">{{ analytics.total_visitors }}</h2>
+              <div class="small mt-1" style="color:rgba(255,255,255,0.9);">3rd: <strong>{{ analytics.third_floor_count }}</strong> &bull; 4th: <strong>{{ analytics.fourth_floor_count }}</strong></div>
+            </div>
+            <div class="kpi-glass-icon"><i class="bi bi-people-fill"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="kpi-card-vivid grad-emerald">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="small fw-bold text-uppercase" style="color:rgba(255,255,255,0.85);font-size:0.7rem;letter-spacing:0.05em;">Visitors In</div>
+              <h2 class="fw-bold mb-0 mt-1" style="font-weight:800;">{{ analytics.visitors_in }}</h2>
+              <div class="small mt-1" style="color:rgba(255,255,255,0.9);">Active inside</div>
+            </div>
+            <div class="kpi-glass-icon"><i class="bi bi-person-walking"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="kpi-card-vivid grad-indigo">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="small fw-bold text-uppercase" style="color:rgba(255,255,255,0.85);font-size:0.7rem;letter-spacing:0.05em;">Checked Out</div>
+              <h2 class="fw-bold mb-0 mt-1" style="font-weight:800;">{{ analytics.visitors_out }}</h2>
+              <div class="small mt-1" style="color:rgba(255,255,255,0.9);">Departed</div>
+            </div>
+            <div class="kpi-glass-icon"><i class="bi bi-box-arrow-right"></i></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-sm-6 col-xl-3">
+        <div class="kpi-card-vivid grad-teal">
+          <div class="d-flex justify-content-between align-items-start">
+            <div>
+              <div class="small fw-bold text-uppercase" style="color:rgba(255,255,255,0.85);font-size:0.7rem;letter-spacing:0.05em;">Client Recommendations</div>
+              <h2 class="fw-bold mb-0 mt-1" id="execRecCount" style="font-weight:800;">{{ analytics.suggestions_count }}</h2>
+              <div class="small mt-1" style="color:rgba(255,255,255,0.9);">From 3rd &amp; 4th desks</div>
+            </div>
+            <div class="kpi-glass-icon"><i class="bi bi-chat-heart-fill"></i></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2. REPORT FILTERS & VISUAL CHARTS -->
+    <div class="section-card mb-4">
+      <div class="card-body py-3 px-4">
+        <form method="GET" action="{{ url_for('executive_dashboard', exec_role=exec_role) }}" class="row g-2 align-items-end">
+          <div class="col-md-2">
+            <label class="form-label">Period</label>
+            <select name="period" id="periodSelect" class="form-select form-select-sm" onchange="toggleCustomDates()">
+              <option value="today" {% if period == 'today' %}selected{% endif %}>Daily (Today)</option>
+              <option value="weekly" {% if period == 'weekly' %}selected{% endif %}>Weekly</option>
+              <option value="monthly" {% if period == 'monthly' %}selected{% endif %}>Monthly</option>
+              <option value="yearly" {% if period == 'yearly' %}selected{% endif %}>Yearly</option>
+              <option value="custom" {% if period == 'custom' %}selected{% endif %}>Custom Range</option>
+              <option value="all" {% if period == 'all' %}selected{% endif %}>All Time</option>
+            </select>
+          </div>
+
+          <div class="col-md-2 custom-date-field" style="{% if period != 'custom' %}display:none;{% endif %}">
+            <label class="form-label">Start Date</label>
+            <input type="date" name="start_date" value="{{ start_date }}" class="form-control form-control-sm">
+          </div>
+
+          <div class="col-md-2 custom-date-field" style="{% if period != 'custom' %}display:none;{% endif %}">
+            <label class="form-label">End Date</label>
+            <input type="date" name="end_date" value="{{ end_date }}" class="form-control form-control-sm">
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label">Floor</label>
+            <select name="floor" class="form-select form-select-sm">
+              <option value="ALL" {% if floor_filter == 'ALL' %}selected{% endif %}>All Floors (3rd &amp; 4th)</option>
+              <option value="3rd Floor" {% if floor_filter == '3rd Floor' %}selected{% endif %}>3rd Floor</option>
+              <option value="4th Floor" {% if floor_filter == '4th Floor' %}selected{% endif %}>4th Floor</option>
+            </select>
+          </div>
+
+          <div class="col-md-2">
+            <label class="form-label">Department</label>
+            <select name="department" class="form-select form-select-sm">
+              <option value="ALL" {% if dept_filter == 'ALL' %}selected{% endif %}>All Departments</option>
+              {% for dept in departments %}
+                <option value="{{ dept }}" {% if dept_filter == dept %}selected{% endif %}>{{ dept }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <div class="col-md-2 d-flex gap-2">
+            <button type="submit" class="btn btn-sm btn-primary w-100"><i class="bi bi-funnel-fill me-1"></i>Apply</button>
+            <a href="{{ url_for('generate_pdf_report', period=period, start_date=start_date, end_date=end_date, floor=floor_filter, department=dept_filter) }}"
+               class="btn btn-sm btn-outline-danger" title="Download PDF Report"><i class="bi bi-file-earmark-pdf-fill"></i></a>
+          </div>
+        </form>
+        <div class="mt-2 small text-muted d-flex flex-wrap justify-content-between align-items-center gap-2">
+          <div>
+            View: <strong class="text-dark">{{ period_label }}</strong> &bull;
+            Floor: <strong class="text-dark">{{ floor_filter }}</strong> &bull;
+            Department: <strong class="text-dark">{{ dept_filter }}</strong>
+          </div>
+          <span style="font-size:0.74rem;"><i class="bi bi-arrow-repeat me-1"></i>Syncing recommendations every 20s</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4 mb-4">
+      <div class="col-lg-5">
+        <div class="section-card h-100">
+          <div class="section-card-head"><h6 class="mb-0 fw-bold"><i class="bi bi-bar-chart-fill me-2 text-primary"></i>Visits by Department</h6></div>
+          <div class="card-body p-3.5"><canvas id="deptChart" height="210"></canvas></div>
+        </div>
+      </div>
+
+      <div class="col-lg-4">
+        <div class="section-card h-100">
+          <div class="section-card-head"><h6 class="mb-0 fw-bold"><i class="bi bi-graph-up-arrow me-2" style="color:#0d9488;"></i>Footfall Trend</h6></div>
+          <div class="card-body p-3.5"><canvas id="trendChart" height="210"></canvas></div>
+        </div>
+      </div>
+
+      <div class="col-lg-3">
+        <div class="section-card h-100">
+          <div class="section-card-head"><h6 class="mb-0 fw-bold"><i class="bi bi-pie-chart-fill me-2" style="color:#7c3aed;"></i>3rd vs 4th Floor</h6></div>
+          <div class="card-body p-3.5 d-flex align-items-center justify-content-center"><canvas id="floorChart" height="210"></canvas></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. CLIENT RECOMMENDATIONS & CLIENT DETAILS TABLE AT THE BOTTOM -->
+    <div class="row g-4">
+      <div class="col-lg-5">
+        <div class="section-card h-100">
+          <div class="section-card-head d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold"><i class="bi bi-chat-heart-fill me-2" style="color:#0d9488;"></i>Client Recommendations (3rd &amp; 4th Floor)</h6>
+            <span class="floor-pill-4" id="execRecBadge">{{ analytics.suggestions|length }}</span>
+          </div>
+          <div class="card-body p-3" id="execRecommendationsContainer" style="max-height: 440px; overflow-y: auto;">
+            {% if analytics.suggestions %}
+              <div class="d-flex flex-column gap-2.5">
+                {% for s in analytics.suggestions %}
+                  <div class="rec-strip">
+                    <div class="d-flex justify-content-between align-items-center mb-1">
+                      <strong class="small">{{ s.visitor_name }}</strong>
+                      <span class="{% if s.floor_location == '3rd Floor' %}floor-pill-3{% else %}floor-pill-4{% endif %}">{{ s.floor_location }} &bull; {{ s.date_logged }}</span>
+                    </div>
+                    <p class="mb-1 small fw-medium">"{{ s.client_suggestion }}"</p>
+                    <div class="d-flex justify-content-between align-items-center text-muted" style="font-size:0.73rem;">
+                      <span>Dept: <strong>{{ s.department_visited }}</strong>{% if s.receptionist_name %} &bull; Desk: {{ s.receptionist_name }}{% endif %}</span>
+                      {% if s.satisfaction_rating %}<span class="reg-pill">{{ s.satisfaction_rating }}</span>{% endif %}
+                    </div>
+                  </div>
+                {% endfor %}
+              </div>
+            {% else %}
+              <div class="text-center text-muted py-5">
+                <i class="bi bi-chat-square-dots fs-2 d-block mb-2 opacity-50"></i>
+                No client recommendations logged in this selection.
+              </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+
+      <div class="col-lg-7">
+        <div class="section-card h-100">
+          <div class="section-card-head d-flex justify-content-between align-items-center">
+            <h6 class="mb-0 fw-bold"><i class="bi bi-list-ul me-2 text-primary"></i>Client Details &amp; Visitor Log</h6>
+            <span class="badge bg-dark rounded-pill px-3">{{ analytics.records|length }} records</span>
+          </div>
+          <div class="card-body p-0" style="max-height: 440px; overflow-y: auto;">
+            <div class="table-responsive">
+              <table class="table table-tracer align-middle mb-0">
+                <thead class="sticky-top">
+                  <tr>
+                    <th>Date / Time</th>
+                    <th>Floor</th>
+                    <th>Client Details</th>
+                    <th>Department</th>
+                    <th>Purpose</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% if analytics.records %}
+                    {% for r in analytics.records %}
+                      <tr>
+                        <td>
+                          <div class="small fw-semibold">{{ r.date_logged }}</div>
+                          <div class="text-muted" style="font-size:0.74rem;">{{ r.time_in }} &ndash; {{ r.time_out or 'In' }}</div>
+                        </td>
+                        <td><span class="{% if r.floor_location == '3rd Floor' %}floor-pill-3{% else %}floor-pill-4{% endif %}">{{ r.floor_location }}</span></td>
+                        <td>
+                          <div class="fw-bold">{{ r.visitor_name }}</div>
+                          <div class="small text-muted">{{ r.phone_no }}</div>
+                        </td>
+                        <td><span class="dept-pill">{{ r.department_visited }}</span></td>
+                        <td class="small">{{ r.purpose }}</td>
+                        <td>
+                          {% if r.status == 'Active Inside' %}
+                            <span class="badge-inside">Inside</span>
+                          {% else %}
+                            <span class="badge-departed">Departed</span>
+                          {% endif %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  {% else %}
+                    <tr><td colspan="6" class="text-center text-muted py-5">No records for selected filters.</td></tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  
+  <script>
+    function syncThemeLabel() {
+      const mode = document.documentElement.getAttribute('data-theme') || 'light';
+      const icon = document.getElementById('themeIcon');
+      const label = document.getElementById('themeLabel');
+      if (icon && label) {
+        if (mode === 'dark') {
+          icon.className = 'bi bi-sun-fill text-warning';
+          label.textContent = 'Light Mode';
+        } else {
+          icon.className = 'bi bi-moon-stars-fill';
+          label.textContent = 'Dark Mode';
+        }
+      }
+    }
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('kmlttb_theme', next);
+      syncThemeLabel();
+      window.dispatchEvent(new Event('kmlttb-theme-changed'));
+    }
+    document.addEventListener('DOMContentLoaded', syncThemeLabel);
+  </script>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script>
+    function toggleCustomDates() {
+      const val = document.getElementById('periodSelect').value;
+      document.querySelectorAll('.custom-date-field').forEach(el => {
+        el.style.display = (val === 'custom') ? 'block' : 'none';
+      });
+    }
+
+    const deptData = {{ analytics.dept_rows | tojson }};
+    const trendData = {{ analytics.trend_rows | tojson }};
+    const thirdCount = {{ analytics.third_floor_count }};
+    const fourthCount = {{ analytics.fourth_floor_count }};
+    let charts = [];
+
+    function buildCharts() {
+      charts.forEach(c => c.destroy());
+      charts = [];
+      const isDark = (document.documentElement.getAttribute('data-theme') || 'light') === 'dark';
+      const tickColor = isDark ? '#94a3b8' : '#475569';
+      const gridColor = isDark ? 'rgba(148, 163, 184, 0.14)' : 'rgba(15, 23, 42, 0.08)';
+
+      charts.push(new Chart(document.getElementById('deptChart'), {
+        type: 'bar',
+        data: {
+          labels: deptData.map(d => d.department_visited),
+          datasets: [{ label: 'Visitors', data: deptData.map(d => d.cnt), backgroundColor: '#2563eb', borderRadius: 8 }]
+        },
+        options: {
+          indexAxis: 'y',
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { beginAtZero: true, ticks: { precision: 0, color: tickColor }, grid: { color: gridColor } },
+            y: { ticks: { color: tickColor }, grid: { display: false } }
+          }
+        }
+      }));
+
+      charts.push(new Chart(document.getElementById('trendChart'), {
+        type: 'line',
+        data: {
+          labels: trendData.map(t => t.date_logged),
+          datasets: [{
+            label: 'Visitors',
+            data: trendData.map(t => t.cnt),
+            borderColor: '#0d9488',
+            backgroundColor: 'rgba(13, 148, 136, 0.18)',
+            fill: true,
+            tension: 0.35
+          }]
+        },
+        options: {
+          plugins: { legend: { display: false } },
+          scales: {
+            x: { ticks: { color: tickColor }, grid: { display: false } },
+            y: { beginAtZero: true, ticks: { precision: 0, color: tickColor }, grid: { color: gridColor } }
+          }
+        }
+      }));
+
+      charts.push(new Chart(document.getElementById('floorChart'), {
+        type: 'doughnut',
+        data: {
+          labels: ['3rd Floor', '4th Floor'],
+          datasets: [{ data: [thirdCount, fourthCount], backgroundColor: ['#2563eb', '#0d9488'], borderWidth: 0 }]
+        },
+        options: {
+          cutout: '65%',
+          plugins: { legend: { position: 'bottom', labels: { color: tickColor } } }
+        }
+      }));
+    }
+
+    buildCharts();
+    window.addEventListener('kmlttb-theme-changed', buildCharts);
+
+    async function pollRecommendations() {
+      const params = new URLSearchParams({
+        period: "{{ period }}",
+        start_date: "{{ start_date }}",
+        end_date: "{{ end_date }}",
+        floor: "{{ floor_filter }}",
+        department: "{{ dept_filter }}"
+      });
+      try {
+        const res = await fetch(`/api/executive-recommendations?${params.toString()}`);
+        if (!res.ok) return;
+        const data = await res.json();
+        document.getElementById('execRecCount').textContent = data.suggestions_count;
+        document.getElementById('execRecBadge').textContent = data.suggestions.length;
+
+        const container = document.getElementById('execRecommendationsContainer');
+        if (!data.suggestions || data.suggestions.length === 0) return;
+
+        container.innerHTML = data.suggestions.map(s => {
+          const pillClass = s.floor_location === '3rd Floor' ? 'floor-pill-3' : 'floor-pill-4';
+          return `
+            <div class="rec-strip mb-2.5">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <strong class="small">${s.visitor_name}</strong>
+                <span class="${pillClass}">${s.floor_location} &bull; ${s.date_logged}</span>
+              </div>
+              <p class="mb-1 small fw-medium">"${s.client_suggestion}"</p>
+              <div class="d-flex justify-content-between align-items-center text-muted" style="font-size:0.73rem;">
+                <span>Dept: <strong>${s.department_visited}</strong>${s.receptionist_name ? ` &bull; Desk: ${s.receptionist_name}` : ''}</span>
+                ${s.satisfaction_rating ? `<span class="reg-pill">${s.satisfaction_rating}</span>` : ''}
+              </div>
+            </div>
+          `;
+        }).join('');
+      } catch (e) { console.error(e); }
+    }
+    setInterval(pollRecommendations, 20000);
+  </script>
+</body>
+</html>

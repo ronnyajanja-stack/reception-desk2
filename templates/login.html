@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KMLTTB Tracer &amp; Executive Portal</title>
+  
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.css" rel="stylesheet">
+  <script>
+    (function() {
+      const saved = localStorage.getItem('kmlttb_theme') || 'light';
+      document.documentElement.setAttribute('data-theme', saved);
+    })();
+  </script>
+  <style>
+    :root, [data-theme="light"] {
+      --bg-canvas: #eef2f7;
+      --surface-panel: #f7f9fc;
+      --surface-header: #e9eff7;
+      --surface-input: #ffffff;
+      --surface-muted-bar: #e2e8f0;
+      --row-alt: rgba(226, 232, 240, 0.35);
+      --row-hover: rgba(13, 148, 136, 0.08);
+      --ink-dark: #0f172a;
+      --ink-sub: #475569;
+      --border-soft: #d5dfec;
+      --rec-bg: #f0fdfa;
+      --rec-border: #99f6e4;
+      --rec-ink: #0f172a;
+      --glow-a: rgba(13, 148, 136, 0.12);
+      --glow-b: rgba(79, 70, 229, 0.10);
+      --shadow-card: 0 8px 24px -10px rgba(15, 23, 42, 0.12), 0 2px 6px rgba(15, 23, 42, 0.04);
+      --shadow-float: 0 18px 38px -12px rgba(15, 23, 42, 0.2);
+    }
+
+    [data-theme="dark"] {
+      --bg-canvas: #090f1a;
+      --surface-panel: #111a2b;
+      --surface-header: #162238;
+      --surface-input: #0d1524;
+      --surface-muted-bar: #1a2842;
+      --row-alt: rgba(30, 41, 59, 0.45);
+      --row-hover: rgba(20, 184, 166, 0.12);
+      --ink-dark: #f1f5f9;
+      --ink-sub: #94a3b8;
+      --border-soft: #24344d;
+      --rec-bg: #0f292b;
+      --rec-border: #134e4a;
+      --rec-ink: #e2e8f0;
+      --glow-a: rgba(20, 184, 166, 0.14);
+      --glow-b: rgba(59, 130, 246, 0.12);
+      --shadow-card: 0 10px 28px -10px rgba(0, 0, 0, 0.65);
+      --shadow-float: 0 20px 44px -12px rgba(0, 0, 0, 0.8);
+    }
+
+    body {
+      font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background-color: var(--bg-canvas);
+      background-image:
+        radial-gradient(at 12% 0%, var(--glow-a) 0px, transparent 45%),
+        radial-gradient(at 88% 4%, var(--glow-b) 0px, transparent 45%);
+      color: var(--ink-dark);
+      transition: background-color 0.2s ease, color 0.2s ease;
+    }
+
+    [data-theme="dark"] .text-dark { color: #f1f5f9 !important; }
+    [data-theme="dark"] .text-muted { color: #94a3b8 !important; }
+    [data-theme="dark"] .text-secondary { color: #cbd5e1 !important; }
+    [data-theme="dark"] .bg-white { background-color: var(--surface-input) !important; color: var(--ink-dark) !important; }
+    [data-theme="dark"] .input-group-text { background-color: var(--surface-header) !important; color: var(--ink-dark) !important; border-color: var(--border-soft) !important; }
+    [data-theme="dark"] .modal-content { background-color: var(--surface-panel) !important; color: var(--ink-dark) !important; border: 1px solid var(--border-soft) !important; }
+    [data-theme="dark"] .btn-close { filter: invert(1) grayscale(100%); }
+
+    .tracer-nav {
+      background: linear-gradient(105deg, #071220 0%, #132238 52%, #0b5c56 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .theme-toggle-btn {
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.22);
+      color: #ffffff;
+      border-radius: 999px;
+      padding: 0.3rem 0.72rem;
+      font-size: 0.76rem;
+      font-weight: 700;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      cursor: pointer;
+      transition: all 0.18s ease;
+    }
+    .theme-toggle-btn:hover {
+      background: rgba(255, 255, 255, 0.22);
+      color: #fde68a;
+    }
+
+    .kpi-card-vivid {
+      border: none;
+      border-radius: 16px;
+      color: #ffffff;
+      padding: 1.15rem 1.3rem;
+      box-shadow: var(--shadow-card);
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    .kpi-card-vivid:hover { transform: translateY(-3px); box-shadow: var(--shadow-float); }
+
+    .grad-emerald { background: linear-gradient(135deg, #059669 0%, #10b981 100%); }
+    .grad-ocean   { background: linear-gradient(135deg, #0284c7 0%, #2563eb 100%); }
+    .grad-indigo  { background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%); }
+    .grad-amber   { background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%); }
+    .grad-teal    { background: linear-gradient(135deg, #0f766e 0%, #0d9488 100%); }
+
+    .kpi-glass-icon {
+      width: 46px;
+      height: 46px;
+      border-radius: 13px;
+      background: rgba(255, 255, 255, 0.2);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.3rem;
+      color: #ffffff;
+      flex-shrink: 0;
+    }
+
+    .section-card {
+      background-color: var(--surface-panel);
+      border: 1px solid var(--border-soft);
+      border-radius: 16px;
+      box-shadow: var(--shadow-card);
+    }
+
+    .section-card-head {
+      background-color: var(--surface-header);
+      border-bottom: 1px solid var(--border-soft);
+      border-radius: 16px 16px 0 0;
+      padding: 0.85rem 1.25rem;
+    }
+
+    .form-label { font-weight: 700; font-size: 0.76rem; color: var(--ink-dark); margin-bottom: 0.25rem; }
+
+    .form-control, .form-select {
+      background-color: var(--surface-input);
+      border: 1px solid var(--border-soft);
+      color: var(--ink-dark);
+      border-radius: 10px;
+      font-size: 0.85rem;
+      padding: 0.44rem 0.68rem;
+    }
+    .form-control:focus, .form-select:focus {
+      background-color: var(--surface-input);
+      color: var(--ink-dark);
+      border-color: #0d9488;
+      box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.18);
+    }
+
+    .btn { border-radius: 10px; font-weight: 600; }
+
+    .badge-inside {
+      background: rgba(22, 163, 74, 0.16);
+      color: #22c55e;
+      border: 1px solid rgba(34, 197, 94, 0.35);
+      font-weight: 700;
+      padding: 0.28rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.73rem;
+    }
+    [data-theme="light"] .badge-inside { background: #dcfce7; color: #15803d; border-color: #86efac; }
+
+    .badge-departed {
+      background: rgba(148, 163, 184, 0.16);
+      color: var(--ink-sub);
+      border: 1px solid var(--border-soft);
+      font-weight: 700;
+      padding: 0.28rem 0.65rem;
+      border-radius: 999px;
+      font-size: 0.73rem;
+    }
+
+    .floor-pill-3 {
+      background: rgba(37, 99, 235, 0.16);
+      color: #60a5fa;
+      border: 1px solid rgba(96, 165, 250, 0.35);
+      font-weight: 700;
+      padding: 0.22rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.71rem;
+    }
+    [data-theme="light"] .floor-pill-3 { background: #dbeafe; color: #1d4ed8; border-color: #93c5fd; }
+
+    .floor-pill-4 {
+      background: rgba(13, 148, 136, 0.18);
+      color: #2dd4bf;
+      border: 1px solid rgba(45, 212, 191, 0.35);
+      font-weight: 700;
+      padding: 0.22rem 0.6rem;
+      border-radius: 999px;
+      font-size: 0.71rem;
+    }
+    [data-theme="light"] .floor-pill-4 { background: #ccfbf1; color: #0f766e; border-color: #5eead4; }
+
+    .dept-pill {
+      background: rgba(124, 58, 237, 0.16);
+      color: #a78bfa;
+      border: 1px solid rgba(167, 139, 250, 0.35);
+      font-weight: 700;
+      padding: 0.24rem 0.6rem;
+      border-radius: 8px;
+      font-size: 0.75rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+    [data-theme="light"] .dept-pill { background: #ede9fe; color: #5b21b6; border-color: #c4b5fd; }
+
+    .reg-pill {
+      background: rgba(245, 158, 11, 0.16);
+      color: #fbbf24;
+      border: 1px solid rgba(251, 191, 36, 0.35);
+      font-weight: 700;
+      padding: 0.18rem 0.5rem;
+      border-radius: 7px;
+      font-size: 0.72rem;
+    }
+    [data-theme="light"] .reg-pill { background: #fef3c7; color: #92400e; border-color: #fcd34d; }
+
+    .table-tracer { color: var(--ink-dark); }
+    .table-tracer th {
+      background-color: var(--surface-muted-bar);
+      color: var(--ink-dark);
+      font-size: 0.7rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 0.72rem 0.8rem;
+      border-bottom: 1px solid var(--border-soft);
+    }
+    .table-tracer td {
+      font-size: 0.84rem;
+      padding: 0.72rem 0.8rem;
+      border-bottom: 1px solid var(--border-soft);
+      vertical-align: middle;
+    }
+    .table-tracer tbody tr:nth-child(even) { background-color: var(--row-alt); }
+    .table-tracer tbody tr:hover { background-color: var(--row-hover); }
+
+    .rec-strip {
+      background: var(--rec-bg);
+      border: 1px solid var(--rec-border);
+      border-left: 4px solid #0d9488;
+      color: var(--rec-ink);
+      border-radius: 12px;
+      padding: 0.72rem 0.9rem;
+    }
+  </style>
+
+  <style>
+    body {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #071220 0%, #132238 52%, #0b5c56 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 1.5rem;
+    }
+    .login-box {
+      max-width: 1020px;
+      width: 100%;
+      background-color: var(--surface-panel);
+      border: 1px solid var(--border-soft);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 28px 65px -15px rgba(0, 0, 0, 0.55);
+    }
+    .login-left {
+      background: linear-gradient(165deg, #071220 0%, #1e3a8a 58%, #0f766e 100%);
+      color: #ffffff;
+      padding: 2.3rem 2rem;
+    }
+    .role-choice {
+      background-color: var(--surface-header);
+      border: 1.5px solid var(--border-soft);
+      border-radius: 14px;
+      padding: 0.9rem 1rem;
+      cursor: pointer;
+      height: 100%;
+      transition: all 0.18s ease;
+    }
+    .role-choice:hover { border-color: #0d9488; transform: translateY(-2px); }
+    .role-radio:checked + .role-choice {
+      border-color: #0d9488;
+      background-color: var(--rec-bg);
+      box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.22);
+    }
+  </style>
+</head>
+<body>
+
+<div class="login-box">
+  <div class="row g-0">
+    <div class="col-lg-4 login-left d-flex flex-column justify-content-between">
+      <div>
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span class="badge rounded-pill px-3 py-1.5" style="background:rgba(255,255,255,0.16);color:#fde68a;">
+            <i class="bi bi-stars me-1"></i>KMLTTB &bull; ACK Gardens
+          </span>
+          <button type="button" class="theme-toggle-btn" onclick="toggleTheme()">
+            <i id="themeIcon" class="bi bi-moon-stars-fill"></i>
+            <span id="themeLabel">Dark Mode</span>
+          </button>
+        </div>
+        <h3 class="fw-bold mb-2" style="font-weight:800;">Tracer &amp; Command</h3>
+        <p class="small mb-4" style="color:rgba(255,255,255,0.8);line-height:1.55;">
+          Top summary dashboard, key-in intake workspace, and client details table with live executive recommendation sync.
+        </p>
+        <div class="small d-flex flex-column gap-2">
+          <div><i class="bi bi-check-circle-fill text-warning me-2"></i>Top KPI Dashboard Strip</div>
+          <div><i class="bi bi-check-circle-fill text-warning me-2"></i>Key-In Form &amp; Autofill Below</div>
+          <div><i class="bi bi-check-circle-fill text-warning me-2"></i>Client Details Ledger at Bottom</div>
+          <div><i class="bi bi-check-circle-fill text-warning me-2"></i>Registrar &amp; Chairlady Live Feed</div>
+        </div>
+      </div>
+
+      <div class="small pt-3 mt-4 border-top" style="border-color:rgba(255,255,255,0.14)!important;color:rgba(255,255,255,0.7);">
+        Authorized KMLTTB Personnel Only
+      </div>
+    </div>
+
+    <div class="col-lg-8 p-4 p-md-5">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+          {% for category, msg in messages %}
+            <div class="alert alert-{{ category }} alert-dismissible fade show py-2 small" role="alert">
+              {{ msg }}
+              <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+          {% endfor %}
+        {% endif %}
+      {% endwith %}
+
+      <h4 class="fw-bold mb-1" style="font-weight:800;">Select Dashboard</h4>
+      <p class="text-muted small mb-4">Choose your role and enter your access PIN.</p>
+
+      <form method="POST" action="{{ url_for('login') }}">
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <input type="radio" class="btn-check role-radio" name="role" id="role_3rd" value="reception_3rd" checked>
+            <label class="role-choice d-block" for="role_3rd">
+              <div class="d-flex align-items-center gap-3 mb-1">
+                <div class="kpi-glass-icon grad-ocean" style="width:40px;height:40px;font-size:1.1rem;"><i class="bi bi-building-fill"></i></div>
+                <div>
+                  <div class="fw-bold">3rd Floor Reception</div>
+                  <span class="floor-pill-3">Desk</span>
+                </div>
+              </div>
+              <div class="small text-muted">Top metrics, key-in form &amp; client table below.</div>
+            </label>
+          </div>
+
+          <div class="col-md-6">
+            <input type="radio" class="btn-check role-radio" name="role" id="role_4th" value="reception_4th">
+            <label class="role-choice d-block" for="role_4th">
+              <div class="d-flex align-items-center gap-3 mb-1">
+                <div class="kpi-glass-icon grad-teal" style="width:40px;height:40px;font-size:1.1rem;"><i class="bi bi-layers-fill"></i></div>
+                <div>
+                  <div class="fw-bold">4th Floor Reception</div>
+                  <span class="floor-pill-4">Desk</span>
+                </div>
+              </div>
+              <div class="small text-muted">Top metrics, key-in form &amp; client table below.</div>
+            </label>
+          </div>
+
+          <div class="col-md-6">
+            <input type="radio" class="btn-check role-radio" name="role" id="role_reg" value="registrar">
+            <label class="role-choice d-block" for="role_reg">
+              <div class="d-flex align-items-center gap-3 mb-1">
+                <div class="kpi-glass-icon grad-indigo" style="width:40px;height:40px;font-size:1.1rem;"><i class="bi bi-award-fill"></i></div>
+                <div>
+                  <div class="fw-bold">Registrar Dashboard</div>
+                  <span class="badge bg-primary-subtle text-primary rounded-pill">Executive</span>
+                </div>
+              </div>
+              <div class="small text-muted">Top KPIs, recommendations &amp; PDF reports.</div>
+            </label>
+          </div>
+
+          <div class="col-md-6">
+            <input type="radio" class="btn-check role-radio" name="role" id="role_chair" value="chairlady">
+            <label class="role-choice d-block" for="role_chair">
+              <div class="d-flex align-items-center gap-3 mb-1">
+                <div class="kpi-glass-icon grad-amber" style="width:40px;height:40px;font-size:1.1rem;"><i class="bi bi-shield-check"></i></div>
+                <div>
+                  <div class="fw-bold">Chairlady Dashboard</div>
+                  <span class="badge bg-warning-subtle text-dark rounded-pill">Executive</span>
+                </div>
+              </div>
+              <div class="small text-muted">Top KPIs, recommendations &amp; PDF reports.</div>
+            </label>
+          </div>
+        </div>
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label class="form-label">Officer Name (Optional)</label>
+            <input type="text" name="duty_officer" class="form-control" placeholder="e.g. Jane Wanjiku">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Access PIN *</label>
+            <input type="password" name="pin" class="form-control" required placeholder="Enter Access PIN" maxlength="12">
+          </div>
+        </div>
+
+        <button type="submit" class="btn btn-dark w-100 py-2.5 fw-bold grad-ocean" style="padding:0.7rem 1rem;border:none;">
+          <i class="bi bi-box-arrow-in-right me-2"></i>Launch Dashboard
+        </button>
+      </form>
+    </div>
+  </div>
+</div>
+
+
+  <script>
+    function syncThemeLabel() {
+      const mode = document.documentElement.getAttribute('data-theme') || 'light';
+      const icon = document.getElementById('themeIcon');
+      const label = document.getElementById('themeLabel');
+      if (icon && label) {
+        if (mode === 'dark') {
+          icon.className = 'bi bi-sun-fill text-warning';
+          label.textContent = 'Light Mode';
+        } else {
+          icon.className = 'bi bi-moon-stars-fill';
+          label.textContent = 'Dark Mode';
+        }
+      }
+    }
+    function toggleTheme() {
+      const current = document.documentElement.getAttribute('data-theme') || 'light';
+      const next = current === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', next);
+      localStorage.setItem('kmlttb_theme', next);
+      syncThemeLabel();
+      window.dispatchEvent(new Event('kmlttb-theme-changed'));
+    }
+    document.addEventListener('DOMContentLoaded', syncThemeLabel);
+  </script>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
